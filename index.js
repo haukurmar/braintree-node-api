@@ -111,6 +111,21 @@ app.post('/api/v1/process', jsonParser, function (request, response) {
 });
 
 app.post("/api/v1/webhooks", function (req, res) {
+	var mailInfo1 = {
+		mail: {
+			to: ['haukurmar@gmail.com'],
+			subject: 'Webhook recieved',
+			body: 'request: ' + util.inspect(req)
+		}
+	};
+
+	mailer.send(mailInfo1, function (err, data, res) {
+		if (err) {
+			console.log('Error sending email', err);
+			//return response.send(500);
+		}
+	});
+
 	gateway.webhookNotification.parse(
 		req.body.bt_signature,
 		req.body.bt_payload,
