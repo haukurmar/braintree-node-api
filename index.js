@@ -91,22 +91,22 @@ app.post('/api/v1/process', jsonParser, function (request, response) {
 	}, function (err, result) {
 		if (err) throw err;
 		console.log(util.inspect(result));
+
+		var mailInfo = {
+			mail: {
+				to: ['haukurmar@gmail.com'],
+				subject: 'Payment notification',
+				body: 'Payment going through: ' + util.inspect(result)
+			}
+		};
+
+		mailer.send(mailInfo, function (err, data, res) {
+			if (err) {
+				console.log('Error sending email', err);
+			}
+		});
+
 		response.json(result);
-	});
-
-	var mailInfo = {
-		mail: {
-			to: ['haukurmar@gmail.com'],
-			subject: 'Payment notification',
-			body: 'Payment going through'
-		}
-	};
-
-	mailer.send(mailInfo, function (err, data, res) {
-		if (err) {
-			console.log('Error sending email', err);
-			//return response.send(500);
-		}
 	});
 });
 
