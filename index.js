@@ -4,6 +4,7 @@ var util = require('util');
 var express = require('express');
 var braintree = require('braintree');
 var bodyParser = require('body-parser');
+var SesMailer = require('./src/ses-mailer');
 
 /**
  * Instantiate your server and a JSON parser to parse all incoming requests
@@ -12,6 +13,19 @@ var app = express();
 app.set('port', (process.env.PORT || 5000));
 
 var jsonParser = bodyParser.json();
+
+// TODO: use nconf
+var mailerConfig = {
+	from: "Braintree API <haukurmar@gmail.com>",
+	aws: {
+		region: "eu-west-1",
+		accessKeyId: process.env.AWS_ACCESSKEY_ID,
+		secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+		sslEnabled: true
+	}
+};
+
+var mailer = new SesMailer(mailerConfig);
 
 /**
  * Instantiate your gateway (update here with your Braintree API Keys)
@@ -95,6 +109,21 @@ app.post("/api/v1/webhooks", function (req, res) {
 			// "subscription_id"
 
 			console.log("[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id);
+
+			var mailInfo = {
+				mail: {
+					to: ['haukurmar@gmail.com'],
+					subject: 'Webhook notification',
+					body: "[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id
+				}
+			};
+
+			mailer.send(mailInfo, function (err, data, res) {
+				if (err) {
+					console.log('Error sending email', err);
+					//return response.send(500);
+				}
+			});
 		}
 	);
 	res.send(200);
