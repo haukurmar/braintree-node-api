@@ -30,6 +30,7 @@ var mailer = new SesMailer(mailerConfig);
 /**
  * Instantiate your gateway (update here with your Braintree API Keys)
  */
+// TODO: Use ENV vars for keys
 var gateway = braintree.connect({
 	environment: braintree.Environment.Sandbox,
 	merchantId: "rz68q2ywrvxwb393",
@@ -91,6 +92,21 @@ app.post('/api/v1/process', jsonParser, function (request, response) {
 		if (err) throw err;
 		console.log(util.inspect(result));
 		response.json(result);
+	});
+
+	var mailInfo = {
+		mail: {
+			to: ['haukurmar@gmail.com'],
+			subject: 'Payment notification',
+			body: 'Payment going through'
+		}
+	};
+
+	mailer.send(mailInfo, function (err, data, res) {
+		if (err) {
+			console.log('Error sending email', err);
+			//return response.send(500);
+		}
 	});
 });
 
