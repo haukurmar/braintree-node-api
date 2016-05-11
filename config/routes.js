@@ -35,7 +35,6 @@ exports = module.exports = function (app) {
 
 		// request option
 		var options = {
-			//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
 			host: app.get('host'),
 			port: app.get('port'),
 			method: 'POST',
@@ -45,12 +44,6 @@ exports = module.exports = function (app) {
 				'Content-Length': Buffer.byteLength(postData)
 			}
 		};
-
-		// TODO: find a better solution
-		var httpProtocol = https;
-		if (process.ENV === 'development') {
-			httpProtocol = http;
-		}
 
 		var result = '';
 		// // request object
@@ -76,7 +69,7 @@ exports = module.exports = function (app) {
 		req.write(postData);
 		req.end();
 
-		response.send(result);
+		response.send(200);
 	});
 
 	/**
@@ -124,12 +117,13 @@ exports = module.exports = function (app) {
 	/**
 	 * Expects a x-www-form-urlencoded request
 	 */
-	app.post("/api/v1/webhooks", function (req, res) {
-		console.log('req.body', req.body);
+	app.post("/api/v1/webhooks", function (request, response) {
 		gateway.webhookNotification.parse(
-			req.body.bt_signature,
-			req.body.bt_payload,
+			request.body.bt_signature,
+			request.body.bt_payload,
 			function (err, webhookNotification) {
+				// TODO: Handle errors
+
 				//webhookNotification.kind
 				// "subscriptionWentPastDue"
 
@@ -152,12 +146,12 @@ exports = module.exports = function (app) {
 
 				app.mailer.send(mailInfo, function (err, data, res) {
 					if (err) {
+						// TODO: Log error
 						console.log('Error sending email', err);
-						//return response.send(500);
 					}
 				});
 			}
 		);
-		res.send(200);
+		response.send(200);
 	});
 };
