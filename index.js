@@ -8,6 +8,7 @@ var SesMailer = require('./src/ses-mailer');
 var http = require('http');
 var https = require('https');
 var querystring = require('querystring');
+var prettyjson = require('prettyjson');
 
 var env = process.ENV || 'development';
 var port = process.env.PORT || 5000;
@@ -184,13 +185,14 @@ app.post("/api/v1/webhooks", function (req, res) {
 			//webhookNotification.subscription.id
 			// "subscription_id"
 
-			console.log("[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id);
+			var notificationBody = prettyjson.render(util.inspect(webhookNotification, {colors: true}));
+			console.log("[Webhook Received " + notificationBody);
 
 			var mailInfo = {
 				mail: {
 					to: ['haukurmar@gmail.com'],
 					subject: 'Webhook notification',
-					body: "[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id
+					body: "[Webhook Received " + notificationBody
 				}
 			};
 
