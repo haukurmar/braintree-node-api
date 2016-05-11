@@ -22,6 +22,15 @@ if(env === 'development') {
 var app = express();
 app.set('port', (port));
 
+app.use(bodyParser.urlencoded({
+	limit: '2mb',
+	extended: true
+}));
+
+app.use(bodyParser.json({
+	limit: '2mb'
+}));
+
 var jsonParser = bodyParser.json();
 
 // TODO: use nconf
@@ -77,9 +86,9 @@ app.get('/api/v1/samplenotification', function (request, response) {
 
 	// request option
 	var options = {
-		host: 'https://haukurmar-braintree-node-api.herokuapp.com',
-		//host: request.headers.host,
-		port: '443',
+		//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
+		host: app.get('host'),
+		port: app.get('port'),
 		method: 'POST',
 		path: '/api/v1/webhooks',
 		headers: {
@@ -105,7 +114,7 @@ app.get('/api/v1/samplenotification', function (request, response) {
 
 	// req error
 	req.on('error', function (err) {
-		console.log(err);
+		console.log('ERROR making a request:', err);
 	});
 
 	//send request with the postData form
@@ -130,7 +139,7 @@ app.get('/api/v1/token', function (request, response) {
 /**
  * Route to process a sale transaction
  */
-app.post('/api/v1/process', jsonParser, function (request, response) {
+app.post('/api/v1/process', function (request, response) {
 	var transaction = request.body;
 	gateway.transaction.sale({
 		amount: transaction.amount,
@@ -157,6 +166,9 @@ app.post('/api/v1/process', jsonParser, function (request, response) {
 	});
 });
 
+/**
+ * Expects a x-www-form-urlencoded request
+ */
 app.post("/api/v1/webhooks", function (req, res) {
 	console.log('res', req, 'res', res);
 
