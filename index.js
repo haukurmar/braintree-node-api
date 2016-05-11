@@ -77,8 +77,8 @@ app.get('/api/v1/samplenotification', function (request, response) {
 
 	// request option
 	var options = {
-		//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
-		host: request.headers.host,
+		host: 'https://haukurmar-braintree-node-api.herokuapp.com',
+		//host: request.headers.host,
 		port: '443',
 		method: 'POST',
 		path: '/api/v1/webhooks',
