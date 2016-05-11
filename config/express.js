@@ -1,7 +1,6 @@
 var bodyParser = require('body-parser');
 
 exports = module.exports = function (app) {
-	var env = process.ENV || 'development';
 	var port = process.env.PORT || 5000;
 
 	/**
