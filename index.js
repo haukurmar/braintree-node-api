@@ -75,11 +75,15 @@ app.get('/api/v1/samplenotification', function (request, response) {
 
 	console.log('PostData', postData);
 
+	var postPort = '443';
+	if(env === 'development') {
+		postPort = '';
+	}
 	// request option
 	var options = {
 		//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
 		host: request.headers.host,
-		//port: '',
+		port: postPort,
 		method: 'POST',
 		path: '/api/v1/webhooks',
 		headers: {
