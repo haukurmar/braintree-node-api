@@ -159,53 +159,54 @@ app.post('/api/v1/process', jsonParser, function (request, response) {
 
 app.post("/api/v1/webhooks", function (req, res) {
 	console.log('res', req, 'res', res);
-	var mailInfo1 = {
-		mail: {
-			to: ['haukurmar@gmail.com'],
-			subject: 'Webhook recieved',
-			body: 'request: ' + util.inspect(req)
-		}
-	};
 
-	mailer.send(mailInfo1, function (err, data, res) {
-		if (err) {
-			console.log('Error sending email', err);
-			//return response.send(500);
-		}
-	});
+	// var mailInfo1 = {
+	// 	mail: {
+	// 		to: ['haukurmar@gmail.com'],
+	// 		subject: 'Webhook recieved',
+	// 		body: 'request: ' + util.inspect(req)
+	// 	}
+	// };
+	//
+	// mailer.send(mailInfo1, function (err, data, res) {
+	// 	if (err) {
+	// 		console.log('Error sending email', err);
+	// 		//return response.send(500);
+	// 	}
+	// });
 
 	console.log('req.body', req.body);
-	gateway.webhookNotification.parse(
-		req.body.bt_signature,
-		req.body.bt_payload,
-		function (err, webhookNotification) {
-			//webhookNotification.kind
-			// "subscriptionWentPastDue"
-
-			//webhookNotification.timestamp
-			// Sun Jan 1 00:00:00 UTC 2012
-
-			//webhookNotification.subscription.id
-			// "subscription_id"
-
-			console.log("[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id);
-
-			var mailInfo = {
-				mail: {
-					to: ['haukurmar@gmail.com'],
-					subject: 'Webhook notification',
-					body: "[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id
-				}
-			};
-
-			mailer.send(mailInfo, function (err, data, res) {
-				if (err) {
-					console.log('Error sending email', err);
-					//return response.send(500);
-				}
-			});
-		}
-	);
+	// gateway.webhookNotification.parse(
+	// 	req.body.bt_signature,
+	// 	req.body.bt_payload,
+	// 	function (err, webhookNotification) {
+	// 		//webhookNotification.kind
+	// 		// "subscriptionWentPastDue"
+	//
+	// 		//webhookNotification.timestamp
+	// 		// Sun Jan 1 00:00:00 UTC 2012
+	//
+	// 		//webhookNotification.subscription.id
+	// 		// "subscription_id"
+	//
+	// 		console.log("[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id);
+	//
+	// 		var mailInfo = {
+	// 			mail: {
+	// 				to: ['haukurmar@gmail.com'],
+	// 				subject: 'Webhook notification',
+	// 				body: "[Webhook Received " + webhookNotification.timestamp + "] | Kind: " + webhookNotification.kind + " | Subscription: " + webhookNotification.subscription.id
+	// 			}
+	// 		};
+	//
+	// 		mailer.send(mailInfo, function (err, data, res) {
+	// 			if (err) {
+	// 				console.log('Error sending email', err);
+	// 				//return response.send(500);
+	// 			}
+	// 		});
+	// 	}
+	// );
 	res.send(200);
 });
 
