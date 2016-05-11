@@ -4,12 +4,13 @@ var https = require('https');
 var querystring = require('querystring');
 var prettyjson = require('prettyjson');
 var util = require('util');
+var braintreeNotifications = require('../src/braintree/webhook-notifications');
 
 exports = module.exports = function (app) {
 	/**
 	 * Instantiate your gateway (update here with your Braintree API Keys)
 	 */
-	// TODO: Use ENV vars for keys
+	// TODO: Use ENV vars for keys and move to nconf
 	var gateway = braintree.connect({
 		environment: braintree.Environment.Sandbox,
 		merchantId: "rz68q2ywrvxwb393",
@@ -124,32 +125,57 @@ exports = module.exports = function (app) {
 			function (err, webhookNotification) {
 				// TODO: Handle errors
 
-				//webhookNotification.kind
-				// "subscriptionWentPastDue"
+				// ----- Handle different kinds of notifications -----
 
-				//webhookNotification.timestamp
-				// Sun Jan 1 00:00:00 UTC 2012
+				console.log('webhookNotification', webhookNotification);
 
-				//webhookNotification.subscription.id
-				// "subscription_id"
+				switch (webhookNotification.kind) {
+				case braintree.WebhookNotification.Kind.Disbursement:
+				case braintree.WebhookNotification.Kind.DisbursementException:
+				case braintree.WebhookNotification.Kind.TransactionDisbursed:
+					// Disbursement
+					braintreeNotifications.handleDisbursement(app, webhookNotification);
+					break;
 
-				var notificationBody = prettyjson.render(util.inspect(webhookNotification, {colors: true}));
-				console.log("[Webhook Received " + notificationBody);
+				case braintree.WebhookNotification.Kind.DisputeLost:
+				case braintree.WebhookNotification.Kind.DisputeOpened:
+				case braintree.WebhookNotification.Kind.DisputeWon:
+					// Dispute
+					braintreeNotifications.handleDispute(app, webhookNotification);
+					break;
 
-				var mailInfo = {
-					mail: {
-						to: ['haukurmar@gmail.com'],
-						subject: 'Webhook notification',
-						body: "[Webhook Received " + notificationBody
-					}
-				};
+				case braintree.WebhookNotification.Kind.PartnerMerchantConnected:
+				case braintree.WebhookNotification.Kind.PartnerMerchantDeclined:
+				case braintree.WebhookNotification.Kind.PartnerMerchantDisconnected:
+					// Partner Merchant Account
+					braintreeNotifications.handlePartnerMerchantAccount(app, webhookNotification);
+					break;
 
-				app.mailer.send(mailInfo, function (err, data, res) {
-					if (err) {
-						// TODO: Log error
-						console.log('Error sending email', err);
-					}
-				});
+				case braintree.WebhookNotification.Kind.SubMerchantAccountApproved:
+				case braintree.WebhookNotification.Kind.SubMerchantAccountDeclined:
+					// Sub Merchant Account
+					braintreeNotifications.handleSubMerchantAccount(app, webhookNotification);
+					break;
+
+				case braintree.WebhookNotification.Kind.SubscriptionCanceled:
+				case braintree.WebhookNotification.Kind.SubscriptionChargedSuccessfully:
+				case braintree.WebhookNotification.Kind.SubscriptionChargedUnsuccessfully:
+				case braintree.WebhookNotification.Kind.SubscriptionExpired:
+				case braintree.WebhookNotification.Kind.SubscriptionTrialEnded:
+				case braintree.WebhookNotification.Kind.SubscriptionWentActive:
+				case braintree.WebhookNotification.Kind.SubscriptionWentPastDue:
+					// Subscription
+					braintreeNotifications.handleSubscription(app, webhookNotification);
+					break;
+
+				case braintree.WebhookNotification.Kind.Check:
+					// Test
+					braintreeNotifications.handleTest(app, webhookNotification);
+					break;
+
+				default:
+					braintreeNotifications.handleUnknown(app, webhookNotification)
+				}
 			}
 		);
 		response.send(200);
