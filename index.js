@@ -5,6 +5,8 @@ var express = require('express');
 var braintree = require('braintree');
 var bodyParser = require('body-parser');
 var SesMailer = require('./src/ses-mailer');
+var https = require('https');
+var querystring = require('querystring');
 
 /**
  * Instantiate your server and a JSON parser to parse all incoming requests
@@ -55,17 +57,60 @@ app.get('/api/v1/samplenotification', function (request, response) {
 		"myId"
 	);
 
-	gateway.webhookNotification.parse(
-		sampleNotification.bt_signature,
-		sampleNotification.bt_payload,
-		function (err, webhookNotification) {
-			webhookNotification.subscription.id
-			console.log('webhookNotification.subscription.id', webhookNotification.subscription.id);
-			// "myId"
-		}
-	);
+	// gateway.webhookNotification.parse(
+	// 	sampleNotification.bt_signature,
+	// 	sampleNotification.bt_payload,
+	// 	function (err, webhookNotification) {
+	// 		webhookNotification.subscription.id
+	// 		console.log('webhookNotification.subscription.id', webhookNotification.subscription.id);
+	// 		// "myId"
+	// 	}
+	// );
 
-	response.send(200);
+
+	// form data
+	var postData = querystring.stringify({
+		bt_signature: sampleNotification.bt_signature,
+		bt_payload: sampleNotification.bt_payload
+	});
+
+	// request option
+	var options = {
+		//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
+		host: request.headers.host,
+		port: 443,
+		method: 'POST',
+		path: '/api/v1/webhooks',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Content-Length': postData.length
+		}
+	};
+
+	var result = '';
+	// request object
+	var req = https.request(options, function (res) {
+		res.on('data', function (chunk) {
+			result += chunk;
+		});
+		res.on('end', function () {
+			console.log(result);
+		});
+		res.on('error', function (err) {
+			console.log(err);
+		})
+	});
+
+	// req error
+	req.on('error', function (err) {
+		console.log(err);
+	});
+
+	//send request with the postData form
+	req.write(postData);
+	req.end();
+
+	response.send(result);
 });
 
 /**
@@ -126,6 +171,7 @@ app.post("/api/v1/webhooks", function (req, res) {
 		}
 	});
 
+	console.log('req.body', req.body);
 	gateway.webhookNotification.parse(
 		req.body.bt_signature,
 		req.body.bt_payload,
