@@ -5,14 +5,22 @@ var express = require('express');
 var braintree = require('braintree');
 var bodyParser = require('body-parser');
 var SesMailer = require('./src/ses-mailer');
+var http = require('http');
 var https = require('https');
 var querystring = require('querystring');
+
+var env = process.ENV || 'development';
+var port = process.env.PORT || 5000;
+var httpProtocol = https;
+if(env === 'development') {
+	httpProtocol = http;
+}
 
 /**
  * Instantiate your server and a JSON parser to parse all incoming requests
  */
 var app = express();
-app.set('port', (process.env.PORT || 5000));
+app.set('port', (port));
 
 var jsonParser = bodyParser.json();
 
@@ -57,16 +65,7 @@ app.get('/api/v1/samplenotification', function (request, response) {
 		"myId"
 	);
 
-	// gateway.webhookNotification.parse(
-	// 	sampleNotification.bt_signature,
-	// 	sampleNotification.bt_payload,
-	// 	function (err, webhookNotification) {
-	// 		webhookNotification.subscription.id
-	// 		console.log('webhookNotification.subscription.id', webhookNotification.subscription.id);
-	// 		// "myId"
-	// 	}
-	// );
-
+	console.log('SampleNotification: ', sampleNotification);
 
 	// form data
 	var postData = querystring.stringify({
@@ -74,23 +73,26 @@ app.get('/api/v1/samplenotification', function (request, response) {
 		bt_payload: sampleNotification.bt_payload
 	});
 
+	console.log('PostData', postData);
+
 	// request option
 	var options = {
 		//host: 'https://haukurmar-braintree-node-api.herokuapp.com',
 		host: request.headers.host,
-		port: 443,
+		//port: '',
 		method: 'POST',
 		path: '/api/v1/webhooks',
 		headers: {
 			'Content-Type': 'application/x-www-form-urlencoded',
-			'Content-Length': postData.length
+			'Content-Length': Buffer.byteLength(postData)
 		}
 	};
 
-	var result = '';
-	// request object
-	var req = https.request(options, function (res) {
+	 var result = '';
+	// // request object
+	var req = httpProtocol.request(options, function (res) {
 		res.on('data', function (chunk) {
+			console.log('on data', chunk);
 			result += chunk;
 		});
 		res.on('end', function () {
