@@ -18,6 +18,17 @@ exports = module.exports = function (app) {
 		privateKey: "85cc36287e21f4d07ad0d202fcbd4548"
 	});
 
+	function formatErrors(errors) {
+		var formattedErrors = '';
+
+		for (var i in errors) { // eslint-disable-line no-inner-declarations, vars-on-top
+			if (errors.hasOwnProperty(i)) {
+				formattedErrors += errors[i].code + ': ' + errors[i].message + '\n' + ' ';
+			}
+		}
+		return formattedErrors;
+	}
+
 	app.get('/api/v1/samplenotification', function (request, response) {
 		var sampleNotification = gateway.webhookTesting.sampleNotification(
 			braintree.WebhookNotification.Kind.SubscriptionWentPastDue,
@@ -179,5 +190,63 @@ exports = module.exports = function (app) {
 			}
 		);
 		response.send(200);
+	});
+
+	app.post("/api/v1/customers", function (request, response) {
+		var customer = {
+			id: request.body.id,
+			firstName: request.body.firstName,
+			lastName: request.body.lastName,
+			email: request.body.email
+			// creditCard: {
+			// 	number: request.body.number,
+			// 	cvv: request.body.cvv,
+			// 	expirationMonth: request.body.month,
+			// 	expirationYear: request.body.year,
+			// 	billingAddress: {
+			// 		postalCode: request.body.postal_code
+			// 	}
+			// }
+		};
+
+		gateway.customer.create(customer, function (err, result) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					data: null,
+					message: 'An error occurred creating a customer' + err
+				});
+			}
+
+			if (result.success) {
+				response.send(200, {
+					success: true,
+					status: 200,
+					data: {
+						customer: result.customer
+					}
+				});
+			} else {
+				// Validation errors
+				var deepErrors = result.errors.deepErrors();
+				var errorMessage = formatErrors(deepErrors);
+
+				// for (var i in deepErrors) {
+				// 	if (deepErrors.hasOwnProperty[i]) {
+				// 		console.log(deepErrors[i].code);
+				// 		console.log(deepErrors[i].message);
+				// 		console.log(deepErrors[i].attribute);
+				// 	}
+				// }
+
+				response.send(400, {
+					success: false,
+					status: 400,
+					message: errorMessage,
+					errors: deepErrors
+				});
+
+			}
+		});
 	});
 };
