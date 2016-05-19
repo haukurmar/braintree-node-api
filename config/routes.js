@@ -100,6 +100,8 @@ exports = module.exports = function (app) {
 	 * Get all available subscription plans
 	 */
 	app.get('/api/v1/plans', function (request, response) {
+		// TODO: Send email to developers if something goes wrong.
+
 		gateway.plan.all(function(err, result) {
 			if(err) {
 				response.send(500, {
@@ -109,13 +111,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			response.send(200, {
-				success: true,
-				status: 200,
-				data: {
-					customer: result
-				}
-			});
+			response.send(200, result);
 
 		});
 	});
