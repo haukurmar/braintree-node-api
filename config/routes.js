@@ -97,6 +97,30 @@ exports = module.exports = function (app) {
 	});
 
 	/**
+	 * Get all available subscription plans
+	 */
+	app.get('/api/v1/plans', function (request, response) {
+		gateway.plan.all(function(err, result) {
+			if(err) {
+				response.send(500, {
+					status: 500,
+					data: null,
+					message: 'An error occurred creating getting subscription plans' + err
+				});
+			}
+
+			response.send(200, {
+				success: true,
+				status: 200,
+				data: {
+					customer: result
+				}
+			});
+
+		});
+	});
+
+	/**
 	 * Route to process a sale transaction
 	 */
 	app.post('/api/v1/process', function (request, response) {
