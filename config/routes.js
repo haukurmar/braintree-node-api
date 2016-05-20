@@ -102,11 +102,10 @@ exports = module.exports = function (app) {
 	app.get('/api/v1/plans', function (request, response) {
 		// TODO: Send email to developers if something goes wrong.
 
-		gateway.plan.all(function(err, result) {
-			if(err) {
+		gateway.plan.all(function (err, result) {
+			if (err) {
 				response.send(500, {
 					status: 500,
-					data: null,
 					message: 'An error occurred creating getting subscription plans' + err
 				});
 			}
@@ -233,7 +232,6 @@ exports = module.exports = function (app) {
 			if (err) {
 				response.send(500, {
 					status: 500,
-					data: null,
 					message: 'An error occurred creating a customer' + err
 				});
 			}
@@ -242,22 +240,107 @@ exports = module.exports = function (app) {
 				response.send(200, {
 					success: true,
 					status: 200,
-					data: {
-						customer: result.customer
-					}
+					customer: result.customer
+				});
+
+				// If we want to generate a clientToken
+				// var newCustomer = result.customer;
+				// gateway.clientToken.generate({
+				// 	customerId: result.customer.id
+				// }, function (err, tokenResponse) {
+				// 	newCustomer.clientToken = tokenResponse.clientToken;
+				//
+				// 	response.send(200, {
+				// 		success: true,
+				// 		status: 200,
+				// 		customer: newCustomer
+				// 	});
+				// });
+			} else {
+				// Validation errors
+				var deepErrors = result.errors.deepErrors();
+				var errorMessage = formatErrors(deepErrors);
+
+				response.send(400, {
+					success: false,
+					status: 400,
+					message: errorMessage,
+					errors: deepErrors
+				});
+
+			}
+		});
+	});
+
+	/**
+	 * To create a new payment method for an existing customer,
+	 * the only required attributes are the customer ID and payment method nonce.
+	 */
+	// TODO: Add options: {makeDefault: true}
+	app.post("/api/v1/paymentmethods", function (request, response) {
+		var data = {
+			customerId: request.body.customerId,
+			paymentMethodNonce: request.body.paymentMethodNonce,
+			options: {
+				verifyCard: true
+			}
+		};
+
+		gateway.paymentMethod.create(data, function (err, result) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					message: 'An error occurred creating a payment method' + err
+				});
+			}
+
+			if (result.success) {
+				console.log('PaymentMethod result', result);
+				response.send(200, {
+					success: true,
+					status: 200,
+					customer: result
 				});
 			} else {
 				// Validation errors
 				var deepErrors = result.errors.deepErrors();
 				var errorMessage = formatErrors(deepErrors);
 
-				// for (var i in deepErrors) {
-				// 	if (deepErrors.hasOwnProperty[i]) {
-				// 		console.log(deepErrors[i].code);
-				// 		console.log(deepErrors[i].message);
-				// 		console.log(deepErrors[i].attribute);
-				// 	}
-				// }
+				response.send(400, {
+					success: false,
+					status: 400,
+					message: errorMessage,
+					errors: deepErrors
+				});
+			}
+		});
+
+	});
+
+	app.post("/api/v1/subscriptions", function (request, response) {
+		var subscription = {
+			paymentMethodToken: request.body.paymentMethodToken,
+			planId: request.body.planId
+		};
+
+		gateway.subscription.create(subscription, function (err, result) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					message: 'An error occurred creating a subscription' + err
+				});
+			}
+
+			if (result.success) {
+				response.send(200, {
+					success: true,
+					status: 200,
+					subscription: result
+				});
+			} else {
+				// Validation errors
+				var deepErrors = result.errors.deepErrors();
+				var errorMessage = formatErrors(deepErrors);
 
 				response.send(400, {
 					success: false,
