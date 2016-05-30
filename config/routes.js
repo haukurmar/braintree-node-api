@@ -272,6 +272,35 @@ exports = module.exports = function (app) {
 		});
 	});
 
+	app.get('/api/v1/customers/:id', function(request, response) {
+		var customerId = request.params.id;
+
+		gateway.customer.find(customerId, function(err, customer) {
+			if(err) {
+				if(err.name === 'notFoundError') {
+					response.send(404, {
+						success: false,
+						status: 404,
+						message: 'Customer ' + err.message
+					});
+				} else {
+					response.send(400, {
+						success: false,
+						status: 400,
+						message: err.message
+					});
+				}
+			} else {
+				// Send customer object as a response
+				response.send(200, {
+					success: true,
+					status: 200,
+					customer: customer
+				});
+			}
+		});
+	});
+
 	/**
 	 * To create a new payment method for an existing customer,
 	 * the only required attributes are the customer ID and payment method nonce.
