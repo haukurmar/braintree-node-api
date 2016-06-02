@@ -272,12 +272,12 @@ exports = module.exports = function (app) {
 		});
 	});
 
-	app.get('/api/v1/customers/:id', function(request, response) {
+	app.get('/api/v1/customers/:id', function (request, response) {
 		var customerId = request.params.id;
 
-		gateway.customer.find(customerId, function(err, customer) {
-			if(err) {
-				if(err.name === 'notFoundError') {
+		gateway.customer.find(customerId, function (err, customer) {
+			if (err) {
+				if (err.name === 'notFoundError') {
 					response.send(404, {
 						success: false,
 						status: 404,
@@ -346,6 +346,9 @@ exports = module.exports = function (app) {
 
 	});
 
+	/**
+	 * Create a new subscription for customer
+	 */
 	app.post("/api/v1/subscriptions", function (request, response) {
 		var subscription = {
 			paymentMethodToken: request.body.paymentMethodToken,
@@ -377,7 +380,6 @@ exports = module.exports = function (app) {
 					message: errorMessage,
 					errors: deepErrors
 				});
-
 			}
 		});
 	});
