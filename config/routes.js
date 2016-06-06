@@ -5,6 +5,7 @@ var querystring = require('querystring');
 var prettyjson = require('prettyjson');
 var util = require('util');
 var braintreeNotifications = require('../src/braintree/webhook-notifications');
+var _ = require('underscore-node');
 
 exports = module.exports = function (app) {
 	/**
@@ -292,6 +293,96 @@ exports = module.exports = function (app) {
 				}
 			} else {
 				// Send customer object as a response
+				response.send(200, {
+					success: true,
+					status: 200,
+					customer: customer
+				});
+			}
+		});
+	});
+
+	/**
+	 * Get customer with all subscriptions, including plan details
+	 * // TODO: Return paymentMethod with each subscription
+	 */
+	app.get('/api/v1/customers/:id/subscriptions', function (request, response) {
+		var customerId = request.params.id;
+
+		gateway.customer.find(customerId, function (err, customer) {
+			if (err) {
+				if (err.name === 'notFoundError') {
+					response.send(404, {
+						success: false,
+						status: 404,
+						message: 'Customer ' + err.message
+					});
+				} else {
+					response.send(400, {
+						success: false,
+						status: 400,
+						message: err.message
+					});
+				}
+			}
+
+			// If a customer has payment methods stored in the vault
+			if (customer.paymentMethods && customer.paymentMethods.length > 0) {
+				customer.subscriptions = [];
+				var customerPaymentMethods = customer.paymentMethods;
+				var subscriptionPlans = [];
+
+				// Get all subscription plans with details (name/description etc.)
+				gateway.plan.all(function (err, results) {
+					if (err) {
+						// TODO: Handle errors
+						console.log('Error fetching plans', err);
+					}
+
+					// TODO: Handle if results.success is not true?
+
+					// Add plans to plans array
+					_.each(results.plans, function (plan) {
+						subscriptionPlans.push(plan);
+					});
+
+					// Loop through each paymentMethod for a customer
+					_.each(customerPaymentMethods, function (paymentMethod) {
+						if (paymentMethod.subscriptions && paymentMethod.subscriptions.length > 0) {
+							var paymentMethodSubscriptions = paymentMethod.subscriptions;
+
+							// Add each subscription for the current paymentMethod to customer subscriptions with plan details
+							_.each(paymentMethodSubscriptions, function (subscription) {
+								// Find plan details
+								var plan = _.find(subscriptionPlans, function (plan) {
+									return plan.id === subscription.planId;
+								});
+
+								// Add subscriptionPlan to subscription
+								subscription.plan = plan;
+
+								// Add the subscription with plan details to the Customer
+								customer.subscriptions.push(subscription);
+							});
+						} else {
+							// Return customer with no subscriptions
+							response.send(200, {
+								success: true,
+								status: 200,
+								customer: customer
+							});
+						}
+					});
+
+					// Return customer with subscriptions
+					response.send(200, {
+						success: true,
+						status: 200,
+						customer: customer
+					});
+				});
+			} else {
+				// No Payment methods stored in the vault
 				response.send(200, {
 					success: true,
 					status: 200,
