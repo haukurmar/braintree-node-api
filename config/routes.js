@@ -11,13 +11,13 @@ exports = module.exports = function (app) {
 	/**
 	 * Instantiate your gateway (update here with your Braintree API Keys)
 	 */
-	// TODO: Use ENV vars for keys and move to nconf
+		// TODO: Use ENV vars for keys and move to nconf
 	var gateway = braintree.connect({
-		environment: braintree.Environment.Sandbox,
-		merchantId: "rz68q2ywrvxwb393",
-		publicKey: "j3gy6zdvqkw44bgb",
-		privateKey: "85cc36287e21f4d07ad0d202fcbd4548"
-	});
+			environment: braintree.Environment.Sandbox,
+			merchantId: "rz68q2ywrvxwb393",
+			publicKey: "j3gy6zdvqkw44bgb",
+			privateKey: "85cc36287e21f4d07ad0d202fcbd4548"
+		});
 
 	function formatErrors(errors) {
 		var formattedErrors = '';
@@ -309,6 +309,17 @@ exports = module.exports = function (app) {
 	app.get('/api/v1/customers/:id/subscriptions', function (request, response) {
 		var customerId = request.params.id;
 
+		function copyPaymentMethodsWithoutSubscriptions(obj) {
+			var newArray = [];
+			_.each(obj, function (item) {
+				var newItem = JSON.parse(JSON.stringify(item));
+				delete newItem.subscriptions;
+				newArray.push(newItem);
+			});
+
+			return newArray;
+		}
+
 		gateway.customer.find(customerId, function (err, customer) {
 			if (err) {
 				if (err.name === 'notFoundError') {
@@ -346,13 +357,15 @@ exports = module.exports = function (app) {
 						subscriptionPlans.push(plan);
 					});
 
-					// Loop through each paymentMethod for a customer
+					// Copy paymentMethods array without subscriptions
+					var customerPaymentMethodsWithoutSubscriptions = copyPaymentMethodsWithoutSubscriptions(customerPaymentMethods);
+
+					// Loop through each paymentMethod for a customer to get subscriptions & plans for adding to customer return object.
 					_.each(customerPaymentMethods, function (paymentMethod) {
 						if (paymentMethod.subscriptions && paymentMethod.subscriptions.length > 0) {
-							var paymentMethodSubscriptions = paymentMethod.subscriptions;
 
 							// Add each subscription for the current paymentMethod to customer subscriptions with plan details
-							_.each(paymentMethodSubscriptions, function (subscription) {
+							_.each(paymentMethod.subscriptions, function (subscription) {
 								// Find plan details
 								var plan = _.find(subscriptionPlans, function (plan) {
 									return plan.id === subscription.planId;
@@ -361,9 +374,18 @@ exports = module.exports = function (app) {
 								// Add subscriptionPlan to subscription
 								subscription.plan = plan;
 
+								var defaultPaymentMethod = _.find(customerPaymentMethodsWithoutSubscriptions, function(paymentMethod) {
+									return paymentMethod.token === subscription.paymentMethodToken;
+								});
+
+								// Add all saved paymentMethods to subscription
+								subscription.defaultPaymentMethod = defaultPaymentMethod;
+								subscription.storedPaymentMethods = customerPaymentMethodsWithoutSubscriptions;
+
 								// Add the subscription with plan details to the Customer
 								customer.subscriptions.push(subscription);
 							});
+
 						} else {
 							// Return customer with no subscriptions
 							response.send(200, {
@@ -373,6 +395,8 @@ exports = module.exports = function (app) {
 							});
 						}
 					});
+
+					// TODO: Remove paymentMethods, creditcards and paypalAccounts
 
 					// Return customer with subscriptions
 					response.send(200, {
