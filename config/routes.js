@@ -385,20 +385,12 @@ exports = module.exports = function (app) {
 								// Add the subscription with plan details to the Customer
 								customer.subscriptions.push(subscription);
 							});
-
-						} else {
-							// Return customer with no subscriptions
-							response.send(200, {
-								success: true,
-								status: 200,
-								customer: customer
-							});
 						}
 					});
 
 					// TODO: Remove paymentMethods, creditcards and paypalAccounts
 
-					// Return customer with subscriptions
+					// Return customer
 					response.send(200, {
 						success: true,
 						status: 200,
@@ -475,6 +467,38 @@ exports = module.exports = function (app) {
 				response.send(500, {
 					status: 500,
 					message: 'An error occurred creating a subscription' + err
+				});
+			}
+
+			if (result.success) {
+				response.send(200, {
+					success: true,
+					status: 200,
+					subscription: result
+				});
+			} else {
+				// Validation errors
+				var deepErrors = result.errors.deepErrors();
+				var errorMessage = formatErrors(deepErrors);
+
+				response.send(400, {
+					success: false,
+					status: 400,
+					message: errorMessage,
+					errors: deepErrors
+				});
+			}
+		});
+	});
+
+	app.delete("/api/v1/subscriptions/:id", function (request, response) {
+		var subscriptionId = request.params.id;
+
+		gateway.subscription.cancel(subscriptionId, function (err, result) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					message: 'An error occurred cancelling a subscription' + err
 				});
 			}
 
