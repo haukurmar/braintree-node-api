@@ -418,7 +418,8 @@ exports = module.exports = function (app) {
 			customerId: request.body.customerId,
 			paymentMethodNonce: request.body.paymentMethodNonce,
 			options: {
-				verifyCard: true
+				verifyCard: true,
+				//failOnDuplicatePaymentMethod: true
 			}
 		};
 
@@ -430,7 +431,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
+				if (result.success) {
 				console.log('PaymentMethod result', result);
 				response.send(200, {
 					success: true,
@@ -490,6 +491,43 @@ exports = module.exports = function (app) {
 			}
 		});
 	});
+
+	/**
+	 * Update a subscription for customer
+	 */
+	app.put("/api/v1/subscriptions", function (request, response) {
+		var currentSubscriptionId = request.body.currentSubscriptionId;
+		var updatedSubscription = request.body.subscription;
+
+		gateway.subscription.update(currentSubscriptionId, updatedSubscription, function (err, result) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					message: 'An error occurred updating a subscription' + err
+				});
+			}
+
+			if (result.success) {
+				response.send(200, {
+					success: true,
+					status: 200,
+					subscription: result
+				});
+			} else {
+				// Validation errors
+				var deepErrors = result.errors.deepErrors();
+				var errorMessage = formatErrors(deepErrors);
+
+				response.send(400, {
+					success: false,
+					status: 400,
+					message: errorMessage,
+					errors: deepErrors
+				});
+			}
+		});
+	});
+
 
 	app.delete("/api/v1/subscriptions/:id", function (request, response) {
 		var subscriptionId = request.params.id;
