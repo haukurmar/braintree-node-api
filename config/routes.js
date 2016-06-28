@@ -374,7 +374,7 @@ exports = module.exports = function (app) {
 								// Add subscriptionPlan to subscription
 								subscription.plan = plan;
 
-								var defaultPaymentMethod = _.find(customerPaymentMethodsWithoutSubscriptions, function(paymentMethod) {
+								var defaultPaymentMethod = _.find(customerPaymentMethodsWithoutSubscriptions, function (paymentMethod) {
 									return paymentMethod.token === subscription.paymentMethodToken;
 								});
 
@@ -431,7 +431,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-				if (result.success) {
+			if (result.success) {
 				console.log('PaymentMethod result', result);
 				response.send(200, {
 					success: true,
@@ -452,6 +452,25 @@ exports = module.exports = function (app) {
 			}
 		});
 
+	});
+
+	app.delete("/api/v1/paymentmethods/:token", function (request, response) {
+		var paymentMethodToken = request.params.token;
+
+		gateway.paymentMethod.delete(paymentMethodToken, function (err) {
+			if (err) {
+				response.send(500, {
+					status: 500,
+					message: 'An error occurred delting a payment method' + err
+				});
+			} else {
+				response.send(200, {
+					success: true,
+					status: 200
+				});
+			}
+
+		});
 	});
 
 	/**
@@ -527,7 +546,6 @@ exports = module.exports = function (app) {
 			}
 		});
 	});
-
 
 	app.delete("/api/v1/subscriptions/:id", function (request, response) {
 		var subscriptionId = request.params.id;
