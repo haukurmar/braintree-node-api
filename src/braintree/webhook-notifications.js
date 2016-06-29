@@ -2,7 +2,7 @@ var prettyjson = require('prettyjson');
 var util = require('util');
 
 function _sendEmail(app, subject, body) {
-	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}));
+	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}), {noColor: false, indent: 4});
 	console.log("[Webhook Received " + notificationBody);
 	var heading = '<h1>Braintree Webhook Received</h1>';
 
@@ -10,7 +10,7 @@ function _sendEmail(app, subject, body) {
 		mail: {
 			to: ['haukurmar@gmail.com'],
 			subject: subject,
-			body: heading + body
+			body: body
 		}
 	};
 	app.mailer.send(mailInfo, function (err, data, res) {
