@@ -461,7 +461,7 @@ exports = module.exports = function (app) {
 			if (err) {
 				response.send(500, {
 					status: 500,
-					message: 'An error occurred delting a payment method' + err
+					message: 'An error occurred deleting a payment method' + err
 				});
 			} else {
 				response.send(200, {

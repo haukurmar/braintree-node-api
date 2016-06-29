@@ -2,14 +2,15 @@ var prettyjson = require('prettyjson');
 var util = require('util');
 
 function _sendEmail(app, subject, body) {
-	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}));
+	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}), {noColor: false, indent: 4});
 	console.log("[Webhook Received " + notificationBody);
+	var heading = '<h1>Braintree Webhook Received</h1>';
 
 	var mailInfo = {
 		mail: {
 			to: ['haukurmar@gmail.com'],
 			subject: subject,
-			body: body
+			body: 'body'
 		}
 	};
 	app.mailer.send(mailInfo, function (err, data, res) {
@@ -25,7 +26,7 @@ function _sendEmail(app, subject, body) {
  * @param webhookNotification
  */
 function handleDisbursement(app, webhookNotification) {
-	_sendEmail(app, 'Braintree Disbursement Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree Disbursement Notification', webhookNotification);
 }
 
 /**
@@ -33,7 +34,7 @@ function handleDisbursement(app, webhookNotification) {
  * @param webhookNotification
  */
 function handleDispute(app, webhookNotification) {
-	_sendEmail(app, 'Braintree Dispute Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree Dispute Notification', webhookNotification);
 }
 
 /**
@@ -41,7 +42,7 @@ function handleDispute(app, webhookNotification) {
  * @param webhookNotification
  */
 function handlePartnerMerchantAccount(app, webhookNotification) {
-	_sendEmail(app, 'Braintree PartnerMerchantAccount Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree PartnerMerchantAccount Notification', webhookNotification);
 }
 
 /**
@@ -49,7 +50,7 @@ function handlePartnerMerchantAccount(app, webhookNotification) {
  * @param webhookNotification
  */
 function handleSubMerchantAccount(app, webhookNotification) {
-	_sendEmail(app, 'Braintree SubMerchantAccount Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree SubMerchantAccount Notification', webhookNotification);
 }
 
 /**
@@ -57,7 +58,7 @@ function handleSubMerchantAccount(app, webhookNotification) {
  * @param webhookNotification
  */
 function handleSubscription(app, webhookNotification) {
-	_sendEmail(app, 'Braintree Subscription Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree Subscription Notification', webhookNotification);
 }
 
 /**
@@ -65,11 +66,11 @@ function handleSubscription(app, webhookNotification) {
  * @param webhookNotification
  */
 function handleTest(app, webhookNotification) {
-	_sendEmail(app, 'Braintree Test Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree Test Notification', webhookNotification);
 }
 
 function handleUnknown(app, webhookNotification) {
-	_sendEmail(app, 'Braintree Unknown Notification', prettyjson.render(util.inspect(webhookNotification, {colors: true})));
+	_sendEmail(app, 'Braintree Unknown Notification', webhookNotification);
 }
 
 exports.handleDisbursement = handleDisbursement;
