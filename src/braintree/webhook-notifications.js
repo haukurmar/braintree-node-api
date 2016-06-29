@@ -10,7 +10,7 @@ function _sendEmail(app, subject, body) {
 		mail: {
 			to: ['haukurmar@gmail.com'],
 			subject: subject,
-			body: body
+			body: heading + notificationBody
 		}
 	};
 	app.mailer.send(mailInfo, function (err, data, res) {
