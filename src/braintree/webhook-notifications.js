@@ -2,7 +2,8 @@ var prettyjson = require('prettyjson');
 var util = require('util');
 
 function _sendEmail(app, subject, body) {
-	var notificationBody = prettyjson.render(body, {noColor: false, indent: 4});
+	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}));
+	console.log("[Webhook Received " + notificationBody);
 	var heading = '<h1>'+ subject +'</h1>';
 
 	var mailInfo = {
