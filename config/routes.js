@@ -36,15 +36,11 @@ exports = module.exports = function (app) {
 			"myId"
 		);
 
-		console.log('SampleNotification: ', sampleNotification);
-
 		// form data
 		var postData = querystring.stringify({
 			bt_signature: sampleNotification.bt_signature,
 			bt_payload: sampleNotification.bt_payload
 		});
-
-		console.log('PostData', postData);
 
 		// request option
 		var options = {
@@ -109,10 +105,9 @@ exports = module.exports = function (app) {
 					status: 500,
 					message: 'An error occurred creating getting subscription plans' + err
 				});
+			} else {
+				response.send(200, result);
 			}
-
-			response.send(200, result);
-
 		});
 	});
 
@@ -126,7 +121,6 @@ exports = module.exports = function (app) {
 			paymentMethodNonce: transaction.payment_method_nonce
 		}, function (err, result) {
 			if (err) throw err;
-			console.log(util.inspect(result));
 
 			var mailInfo = {
 				mail: {
@@ -138,6 +132,7 @@ exports = module.exports = function (app) {
 
 			app.mailer.send(mailInfo, function (err, data, res) {
 				if (err) {
+					// TODO: Log error
 					console.log('Error sending email', err);
 				}
 			});
@@ -157,8 +152,6 @@ exports = module.exports = function (app) {
 				// TODO: Handle errors
 
 				// ----- Handle different kinds of notifications -----
-
-				console.log('webhookNotification', webhookNotification);
 
 				switch (webhookNotification.kind) {
 				case braintree.WebhookNotification.Kind.Disbursement:
@@ -237,7 +230,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
+			else if (result.success) {
 				response.send(200, {
 					success: true,
 					status: 200,
@@ -338,7 +331,7 @@ exports = module.exports = function (app) {
 			}
 
 			// If a customer has payment methods stored in the vault
-			if (customer.paymentMethods && customer.paymentMethods.length > 0) {
+			else if (customer.paymentMethods && customer.paymentMethods.length > 0) {
 				customer.subscriptions = [];
 				var customerPaymentMethods = customer.paymentMethods;
 				var subscriptionPlans = [];
@@ -431,8 +424,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
-				console.log('PaymentMethod result', result);
+			else if (result.success) {
 				response.send(200, {
 					success: true,
 					status: 200,
@@ -490,7 +482,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
+			else if (result.success) {
 				response.send(200, {
 					success: true,
 					status: 200,
@@ -526,7 +518,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
+			else if (result.success) {
 				response.send(200, {
 					success: true,
 					status: 200,
@@ -558,7 +550,7 @@ exports = module.exports = function (app) {
 				});
 			}
 
-			if (result.success) {
+			else if (result.success) {
 				response.send(200, {
 					success: true,
 					status: 200,
