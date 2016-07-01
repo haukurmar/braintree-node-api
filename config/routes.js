@@ -508,34 +508,83 @@ exports = module.exports = function (app) {
 	 */
 	app.put("/api/v1/subscriptions", function (request, response) {
 		var currentSubscriptionId = request.body.currentSubscriptionId;
-		var updatedSubscription = request.body.subscription;
+		var subscriptionChanges = request.body.subscriptionChanges;
+		var currentBillingCycle;
 
-		gateway.subscription.update(currentSubscriptionId, updatedSubscription, function (err, result) {
-			if (err) {
-				response.send(500, {
-					status: 500,
-					message: 'An error occurred updating a subscription' + err
-				});
-			}
+		// If we want to enable or disable auto renew
+		var subscriptionPlans = [];
 
-			else if (result.success) {
-				response.send(200, {
-					success: true,
-					status: 200,
-					subscription: result
-				});
-			} else {
-				// Validation errors
-				var deepErrors = result.errors.deepErrors();
-				var errorMessage = formatErrors(deepErrors);
+		gateway.subscription.find(currentSubscriptionId, function (err, result) {
+			// Find the current billingCycle of the current subscription
+			var currentBillingCycle = result.currentBillingCycle;
 
-				response.send(400, {
-					success: false,
-					status: 400,
-					message: errorMessage,
-					errors: deepErrors
+			// Get all subscription plans with details (name/description etc.)
+			gateway.plan.all(function (err, results) {
+				if (err) {
+					// TODO: Handle errors
+					console.log('Error fetching plans', err);
+				}
+
+				// TODO: Handle if results.success is not true?
+
+				// Add plans to plans array
+				_.each(results.plans, function (plan) {
+					subscriptionPlans.push(plan);
 				});
-			}
+
+				// Find the plan we are trying to update to
+				var plan = _.find(subscriptionPlans, function (plan) {
+					return plan.id === subscriptionChanges.planId;
+				});
+
+				if (!plan) {
+					response.send(500, {
+						status: 500,
+						message: 'Could not find the selected subscription plan, please contact support.'
+					});
+					return;
+				}
+
+				// If we are trying to update the price of the subscription and does not match with the plan
+				if (subscriptionChanges.price !== undefined && subscriptionChanges.price !== plan.price) {
+					// Disable auto renew
+					subscriptionChanges.price = 0.00;
+					subscriptionChanges.numberOfBillingCycles = currentBillingCycle;
+				} else {
+					// Enable auto renew
+					subscriptionChanges.price = plan.price;
+					subscriptionChanges.numberOfBillingCycles = null;
+				}
+
+				gateway.subscription.update(currentSubscriptionId, subscriptionChanges, function (err, result) {
+					if (err) {
+						response.send(500, {
+							status: 500,
+							message: 'An error occurred updating a subscription' + err
+						});
+					}
+
+					else if (result.success) {
+						response.send(200, {
+							success: true,
+							status: 200,
+							subscription: result
+						});
+					} else {
+						// Validation errors
+						var deepErrors = result.errors.deepErrors();
+						var errorMessage = formatErrors(deepErrors);
+
+						response.send(400, {
+							success: false,
+							status: 400,
+							message: errorMessage,
+							errors: deepErrors
+						});
+					}
+				});
+			});
+
 		});
 	});
 
