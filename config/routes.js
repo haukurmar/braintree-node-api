@@ -525,8 +525,6 @@ exports = module.exports = function (app) {
 					console.log('Error fetching plans', err);
 				}
 
-				// TODO: Handle if results.success is not true?
-
 				// Add plans to plans array
 				_.each(results.plans, function (plan) {
 					subscriptionPlans.push(plan);
