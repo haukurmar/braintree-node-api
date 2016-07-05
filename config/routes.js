@@ -469,10 +469,7 @@ exports = module.exports = function (app) {
 	 * Create a new subscription for customer
 	 */
 	app.post("/api/v1/subscriptions", function (request, response) {
-		var subscription = {
-			paymentMethodToken: request.body.paymentMethodToken,
-			planId: request.body.planId
-		};
+		var subscription = request.body.subscription;
 
 		gateway.subscription.create(subscription, function (err, result) {
 			if (err) {
