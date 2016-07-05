@@ -473,24 +473,20 @@ exports = module.exports = function (app) {
 
 		gateway.subscription.create(subscription, function (err, result) {
 			if (err) {
-				response.send(500, {
+				response.status(500).send({
 					status: 500,
 					message: 'An error occurred creating a subscription' + err
 				});
 			}
 
 			else if (result.success) {
-				response.send(200, {
-					success: true,
-					status: 200,
-					subscription: result
-				});
+				response.status(200).send(result);
 			} else {
 				// Validation errors
 				var deepErrors = result.errors.deepErrors();
 				var errorMessage = formatErrors(deepErrors);
 
-				response.send(400, {
+				response.status(400).send({
 					success: false,
 					status: 400,
 					message: errorMessage,
