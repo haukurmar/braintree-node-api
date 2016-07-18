@@ -14,9 +14,9 @@ exports = module.exports = function (app) {
 		// TODO: Use ENV vars for keys and move to nconf
 	var gateway = braintree.connect({
 			environment: braintree.Environment.Sandbox,
-			merchantId: "rz68q2ywrvxwb393",
-			publicKey: "j3gy6zdvqkw44bgb",
-			privateKey: "85cc36287e21f4d07ad0d202fcbd4548"
+			merchantId: 'rz68q2ywrvxwb393',
+			publicKey: 'j3gy6zdvqkw44bgb',
+			privateKey: '85cc36287e21f4d07ad0d202fcbd4548'
 		});
 
 	function formatErrors(errors) {
@@ -33,7 +33,7 @@ exports = module.exports = function (app) {
 	app.get('/api/v1/samplenotification', function (request, response) {
 		var sampleNotification = gateway.webhookTesting.sampleNotification(
 			braintree.WebhookNotification.Kind.SubscriptionWentPastDue,
-			"myId"
+			'myId'
 		);
 
 		// form data
@@ -66,7 +66,7 @@ exports = module.exports = function (app) {
 			});
 			res.on('error', function (err) {
 				console.log(err);
-			})
+			});
 		});
 
 		// req error
@@ -86,9 +86,12 @@ exports = module.exports = function (app) {
 	 */
 	app.get('/api/v1/token', function (request, response) {
 		gateway.clientToken.generate({}, function (err, res) {
-			if (err) throw err;
+			if (err) {
+				throw err;
+			}
+
 			response.json({
-				"client_token": res.clientToken
+				'client_token': res.clientToken
 			});
 		});
 	});
@@ -120,7 +123,9 @@ exports = module.exports = function (app) {
 			amount: transaction.amount,
 			paymentMethodNonce: transaction.payment_method_nonce
 		}, function (err, result) {
-			if (err) throw err;
+			if (err) {
+				throw err;
+			}
 
 			var mailInfo = {
 				mail: {
@@ -130,7 +135,8 @@ exports = module.exports = function (app) {
 				}
 			};
 
-			app.mailer.send(mailInfo, function (err, data, res) {
+			//app.mailer.send(mailInfo, function (err, data, res) {
+			app.mailer.send(mailInfo, function (err) {
 				if (err) {
 					// TODO: Log error
 					console.log('Error sending email', err);
@@ -144,7 +150,7 @@ exports = module.exports = function (app) {
 	/**
 	 * Expects a x-www-form-urlencoded request
 	 */
-	app.post("/api/v1/webhooks", function (request, response) {
+	app.post('/api/v1/webhooks', function (request, response) {
 		gateway.webhookNotification.parse(
 			request.body.bt_signature,
 			request.body.bt_payload,
@@ -198,14 +204,14 @@ exports = module.exports = function (app) {
 					break;
 
 				default:
-					braintreeNotifications.handleUnknown(app, webhookNotification)
+					braintreeNotifications.handleUnknown(app, webhookNotification);
 				}
 			}
 		);
 		response.send(200);
 	});
 
-	app.post("/api/v1/customers", function (request, response) {
+	app.post('/api/v1/customers', function (request, response) {
 		var customer = {
 			id: request.body.id,
 			firstName: request.body.firstName,
@@ -406,7 +412,7 @@ exports = module.exports = function (app) {
 	 * the only required attributes are the customer ID and payment method nonce.
 	 */
 	// TODO: Add options: {makeDefault: true}
-	app.post("/api/v1/paymentmethods", function (request, response) {
+	app.post('/api/v1/paymentmethods', function (request, response) {
 		var data = {
 			customerId: request.body.customerId,
 			paymentMethodNonce: request.body.paymentMethodNonce,
@@ -446,7 +452,7 @@ exports = module.exports = function (app) {
 
 	});
 
-	app.delete("/api/v1/paymentmethods/:token", function (request, response) {
+	app.delete('/api/v1/paymentmethods/:token', function (request, response) {
 		var paymentMethodToken = request.params.token;
 
 		gateway.paymentMethod.delete(paymentMethodToken, function (err) {
@@ -468,7 +474,7 @@ exports = module.exports = function (app) {
 	/**
 	 * Create a new subscription for customer
 	 */
-	app.post("/api/v1/subscriptions", function (request, response) {
+	app.post('/api/v1/subscriptions', function (request, response) {
 		var subscription = request.body.subscription;
 
 		gateway.subscription.create(subscription, function (err, result) {
@@ -499,10 +505,9 @@ exports = module.exports = function (app) {
 	/**
 	 * Update a subscription for customer
 	 */
-	app.put("/api/v1/subscriptions", function (request, response) {
+	app.put('/api/v1/subscriptions', function (request, response) {
 		var currentSubscriptionId = request.body.currentSubscriptionId;
 		var subscriptionChanges = request.body.subscriptionChanges;
-		var currentBillingCycle;
 
 		// If we want to enable or disable auto renew
 		var subscriptionPlans = [];
@@ -579,7 +584,7 @@ exports = module.exports = function (app) {
 		});
 	});
 
-	app.delete("/api/v1/subscriptions/:id", function (request, response) {
+	app.delete('/api/v1/subscriptions/:id', function (request, response) {
 		var subscriptionId = request.params.id;
 
 		gateway.subscription.cancel(subscriptionId, function (err, result) {
