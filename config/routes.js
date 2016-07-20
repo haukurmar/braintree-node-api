@@ -1,5 +1,6 @@
 var braintree = require('braintree');
 var braintreeApi = require('../src/braintree/braintree-api');
+var braintreeNotifications = require('../src/braintree/webhook-notifications');
 
 exports = module.exports = function (app) {
 	/**
