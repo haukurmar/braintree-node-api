@@ -1,9 +1,10 @@
-var prettyjson = require('prettyjson');
-var util = require('util');
+// var prettyjson = require('prettyjson');
+// var util = require('util');
 
 function _sendEmail(app, subject, body) {
-	var notificationBody = prettyjson.render(util.inspect(body, {colors: true}));
-	console.log("[Webhook Received " + notificationBody);
+	//var notificationBody = prettyjson.render(util.inspect(body, {colors: true}));
+	var notificationBody = JSON.stringify(body);
+	console.log('[Webhook Received ' + notificationBody);
 	var heading = '<h1>'+ subject +'</h1>';
 
 	var mailInfo = {
@@ -13,7 +14,8 @@ function _sendEmail(app, subject, body) {
 			body: heading + notificationBody
 		}
 	};
-	app.mailer.send(mailInfo, function (err, data, res) {
+	//app.mailer.send(mailInfo, function (err, data, res) {
+	app.mailer.send(mailInfo, function (err) {
 		if (err) {
 			// TODO: Log error
 			console.log('Error sending email', err);
