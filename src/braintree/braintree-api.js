@@ -139,6 +139,7 @@ function createPaymentMethod(request, response) {
 		paymentMethodNonce: request.body.paymentMethodNonce,
 		options: {
 			verifyCard: true,
+			verificationMerchantAccountId: request.body.verificationMerchantAccountId
 			//failOnDuplicatePaymentMethod: true
 		}
 	};
@@ -160,7 +161,13 @@ function createPaymentMethod(request, response) {
 		} else {
 			// Validation errors
 			var deepErrors = result.errors.deepErrors();
-			var errorMessage = formatErrors(deepErrors);
+			var errorMessage;
+
+			if (deepErrors.length) {
+				errorMessage = formatErrors(deepErrors);
+			} else {
+				errorMessage = result.message;
+			}
 
 			return response.send(400, {
 				success: false,
@@ -417,7 +424,8 @@ function processSaleTransaction(request, response) {
 	var transaction = request.body;
 	gateway.transaction.sale({
 		amount: transaction.amount,
-		paymentMethodNonce: transaction.payment_method_nonce
+		paymentMethodNonce: transaction.payment_method_nonce,
+		merchantAccountId: transaction.merchantAccountId
 	}, function (err, result) {
 		if (err) {
 			throw err;
