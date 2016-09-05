@@ -12,12 +12,12 @@ var gateway = braintree.connect({
 		privateKey: '85cc36287e21f4d07ad0d202fcbd4548'
 	});
 
-function formatErrors(errors) {
+function formatErrors(deepErrors) {
 	var formattedErrors = '';
 
-	for (var i in errors) { // eslint-disable-line no-inner-declarations, vars-on-top
-		if (errors.hasOwnProperty(i)) {
-			formattedErrors += errors[i].code + ': ' + errors[i].message + '\n' + ' ';
+	for (var i in deepErrors) { // eslint-disable-line no-inner-declarations, vars-on-top
+		if (deepErrors.hasOwnProperty(i)) {
+			formattedErrors += deepErrors[i].code + ': ' + deepErrors[i].message + '\n' + ' ';
 		}
 	}
 	return formattedErrors;
@@ -48,7 +48,13 @@ function cancelSubscription(request, response) {
 		} else {
 			// Validation errors
 			var deepErrors = result.errors.deepErrors();
-			var errorMessage = formatErrors(deepErrors);
+			var errorMessage;
+
+			if (deepErrors.length) {
+				errorMessage = formatErrors(deepErrors);
+			} else {
+				errorMessage = result.message;
+			}
 
 			return response.send(400, {
 				success: false,
@@ -113,7 +119,13 @@ function createCustomer(request, response) {
 		} else {
 			// Validation errors
 			var deepErrors = result.errors.deepErrors();
-			var errorMessage = formatErrors(deepErrors);
+			var errorMessage;
+
+			if (deepErrors.length) {
+				errorMessage = formatErrors(deepErrors);
+			} else {
+				errorMessage = result.message;
+			}
 
 			return response.send(400, {
 				success: false,
@@ -200,13 +212,25 @@ function createSubscription(request, response) {
 		} else {
 			// Validation errors
 			var deepErrors = result.errors.deepErrors();
-			var errorMessage = formatErrors(deepErrors);
+			var errorMessage;
+
+			if (deepErrors.length) {
+				errorMessage = formatErrors(deepErrors);
+			} else {
+				errorMessage = result.message;
+			}
+
+			var transaction;
+			if(result.transaction) {
+				transaction = result.transaction;
+			}
 
 			return response.status(400).send({
 				success: false,
 				status: 400,
 				message: errorMessage,
-				errors: deepErrors
+				errors: deepErrors,
+				transaction: transaction
 			});
 		}
 	});
@@ -503,7 +527,13 @@ function updateSubscription(request, response) {
 				} else {
 					// Validation errors
 					var deepErrors = result.errors.deepErrors();
-					var errorMessage = formatErrors(deepErrors);
+					var errorMessage;
+
+					if (deepErrors.length) {
+						errorMessage = formatErrors(deepErrors);
+					} else {
+						errorMessage = result.message;
+					}
 
 					return response.send(400, {
 						success: false,
