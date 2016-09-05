@@ -10,16 +10,19 @@ exports = module.exports = function (app) {
 	 */
 		// TODO: Use ENV vars for keys and move to nconf
 	var gateway = braintree.connect({
-			environment: braintree.Environment.Sandbox,
-			merchantId: 'rz68q2ywrvxwb393',
-			publicKey: 'j3gy6zdvqkw44bgb',
-			privateKey: '85cc36287e21f4d07ad0d202fcbd4548'
-		});
+		environment: braintree.Environment.Sandbox,
+		merchantId: 'rz68q2ywrvxwb393',
+		publicKey: 'j3gy6zdvqkw44bgb',
+		privateKey: '85cc36287e21f4d07ad0d202fcbd4548'
+	});
 
-	app.get('/api/v1/samplenotification', function (request, response) {
+
+	app.get('/api/v1/webhooktest/:type/:subId', function (request, response) {
+		var webhookType = request.params.type;
+		var subscriptionId = request.params.subId;
 		var sampleNotification = gateway.webhookTesting.sampleNotification(
-			braintree.WebhookNotification.Kind.SubscriptionWentPastDue,
-			'myId'
+			webhookType,
+			subscriptionId
 		);
 
 		// form data
