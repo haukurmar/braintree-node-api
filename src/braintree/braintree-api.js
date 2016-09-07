@@ -449,7 +449,8 @@ function processSaleTransaction(request, response) {
 	gateway.transaction.sale({
 		amount: transaction.amount,
 		paymentMethodNonce: transaction.payment_method_nonce,
-		merchantAccountId: transaction.merchantAccountId
+		merchantAccountId: transaction.merchantAccountId,
+		submitForSettlement: true
 	}, function (err, result) {
 		if (err) {
 			throw err;
