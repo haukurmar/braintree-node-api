@@ -118,6 +118,11 @@ exports = module.exports = function (app) {
 	app.post('/api/v1/subscriptions', braintreeApi.createSubscription);
 
 	/**
+	 * Retry a transaction for a subscription
+	 */
+	app.post('/api/v1/subscriptions/:id/retry', braintreeApi.retrySubscriptionCharge);
+
+	/**
 	 * Update a subscription for customer
 	 */
 	app.put('/api/v1/subscriptions', braintreeApi.updateSubscription);

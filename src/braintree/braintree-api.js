@@ -221,7 +221,7 @@ function createSubscription(request, response) {
 			}
 
 			var transaction;
-			if(result.transaction) {
+			if (result.transaction) {
 				transaction = result.transaction;
 			}
 
@@ -461,6 +461,70 @@ function processSaleTransaction(request, response) {
 }
 
 /**
+ * Re-usable validation error response
+ * @param result
+ * @param response
+ * @returns {*}
+ * @private
+ */
+function _returnValidationErrorResponse(result, response) {
+	// Validation errors
+	var deepErrors = result.errors.deepErrors();
+	var errorMessage;
+
+	if (deepErrors.length) {
+		errorMessage = formatErrors(deepErrors);
+	} else {
+		errorMessage = result.message;
+	}
+
+	return response.send(400, {
+		success: false,
+		status: 400,
+		message: errorMessage,
+		errors: deepErrors
+	});
+}
+function _returnErrorResponse(errorMessage, err, response) {
+	return response.send(500, {
+		status: 500,
+		message: errorMessage + err
+	});
+}
+
+/**
+ * Retries a transaction charge for a specific subscription.
+ * Expects a ID parameter for a susbscription.
+ * @param request
+ * @param response
+ */
+function retrySubscriptionCharge(request, response) {
+	var subscriptionId = request.params.id;
+
+	gateway.subscription.retryCharge(subscriptionId, function (err, retryResult) {
+		if (err) {
+			return _returnErrorResponse('An error occurred retrying subscription transaction:', err, response);
+		} else if (retryResult.success) {
+			gateway.transaction.submitForSettlement(retryResult.transaction.id, function (err, result) {
+				if (err) {
+					return _returnErrorResponse('An error occurred submitting payment for settlement:', err, response);
+				} else if (result.success) {
+					return response.send(200, {
+						success: true,
+						status: 200,
+						result: result
+					});
+				} else {
+					return _returnValidationErrorResponse(result, response);
+				}
+			});
+		} else {
+			return _returnValidationErrorResponse(retryResult, response);
+		}
+	});
+}
+
+/**
  * Update a subscription for customer
  * @param request
  * @param response
@@ -558,6 +622,7 @@ exports.getCustomer = getCustomer;
 exports.getCustomerWithSubscriptionDetails = getCustomerWithSubscriptionDetails;
 exports.getClientToken = getClientToken;
 exports.getSubscriptionPlans = getSubscriptionPlans;
+exports.retrySubscriptionCharge = retrySubscriptionCharge;
 exports.processSaleTransaction = processSaleTransaction;
 exports.updateSubscription = updateSubscription;
 
